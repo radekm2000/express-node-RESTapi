@@ -3,29 +3,54 @@ const Product = require('../models/Product')
 
 
 const getAllProducts = async(req, res) => {
-    const {company, sort, select, name, page, numericFilters} = req.query
+    const {company, sort, select, name, page,} = req.query
+    let {numericFilters} = req.query
     const queryObject = {}
-    let result =  Product.find(queryObject) // it returns a promise
-    
-    if(select) {
-        const selectList = select.split(',').join(" ")
-        result = Product.find({}).select(selectList)
+   
+    if(company) {
+        queryObject.company = company
     }
+
+    
+    
     if(numericFilters) {
         const operatorMap = {
-            
+            '<=' : '$lte',
+            '>=' : '$gte',
+            '<' : '$lt',
+            '>' : '$gt',
+            '=' : 'eq'
         }
 
+        const option = ['price']
+        
+        for(const [operator, value] of Object.entries(operatorMap)) {
+            let updatedFilters = numericFilters.replace(operator,`-${value}-`)
+            const [field, oper, val] = updatedFilters.split('-')
+            
+            if(option.includes(field)) {
+                
+                queryObject[field] = {
+                    [oper]: Number(val)
+                }
+                
+                
+            }
+        }
 
     }
+    let result =  Product.find(queryObject) // it returns a promise
     if(name) {
         const regex = new RegExp(name, 'i')
         result = Product.find({name: { $regex: regex }})
     }
 
-    if(company) {
-        queryObject.company = company
+    if(select) {
+        const selectList = select.split(',').join(" ")
+        result = Product.find({}).select(selectList)
     }
+
+    
 
     if(sort) {
         const sortList = sort.split(',').join(" ") // syntax must be like(price name)
@@ -36,7 +61,7 @@ const getAllProducts = async(req, res) => {
     let limit = 7  || req.query.limit
     const skip = (page - 1) * limit 
     result.skip(skip).limit(limit)
-
+    
 
     const products = await result
     res.status(StatusCodes.OK).json({products, count: products.length})
