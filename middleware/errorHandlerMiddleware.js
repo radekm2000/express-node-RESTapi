@@ -8,8 +8,9 @@ const errorHandlerMiddleware = (err, req, res, next) => {
         const duplicatedKey = Object.keys(err.keyValue)[0]
         const duplicatedValue = err.keyValue[duplicatedKey]
         return res.status(StatusCodes.CONFLICT).json({msg: `${duplicatedKey} "${duplicatedValue}" has already been taken, it must be unique`})
+    
     }
-    res.status(errStatus).json({msg: errMsg})
+    return res.status(errStatus).json({errMsg})
 }
 
 module.exports = errorHandlerMiddleware
