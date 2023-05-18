@@ -1,9 +1,12 @@
+const jwt = require('jsonwebtoken')
 const { UnauthorizedError, BadRequestError } = require('../customErrors')
 const User = require('../models/User')
 const {StatusCodes} = require('http-status-codes')
+const RefreshToken = require('../models/RefreshToken');
+const NotFoundError = require('../customErrors/notfoundError');
 
 
-
+let refreshTokens = [];
 const register = async(req, res) => {
     const user = await User.create(req.body)
     const token = user.createJWT()
@@ -32,11 +35,56 @@ const login = async(req, res) => {
         throw new UnauthorizedError('Invalid password')
     }
     const token = user.createJWT()
-    res.status(StatusCodes.OK).json({user, token})
+    const refreshToken = user.createRefreshJWT()
+    //----------------creating refresh token and saving it to database
+    // const refreshToken = user.createRefreshJWT();
+    //     const refreshTokenToDB = await RefreshToken.create({
+    //     token: refreshToken,
+    //     user: user._id,
+    //     createdAt: Date.now(),
+    //     expiresIn : process.env.JWT_REFRESH_LIFETIME
+    // })
+    // await refreshTokenToDB.save()
+    refreshTokens.push(refreshToken)
+
+    res.status(StatusCodes.OK).json({user, accessToken: token, refreshToken: refreshToken})
+
 }
+
+
+//creates new acces token on base of refresh token
+const createNewToken = async(req, res) => {
+    const refreshToken = req.header('x-auth-token')
+
+    if(!refreshToken) {
+        throw new NotFoundError('Token not found in header')
+    }
+
+    if(!refreshTokens.includes(refreshToken)) {
+        throw new NotFoundError('your refresh  token must have expired ')
+    }
+
+    try {
+        const payload = await jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+        const {userId} = payload
+        
+        const accessToken = await jwt.sign({userId: userId}, process.env.JWT_SECRET, {expiresIn: "5m"})
+        res.json({accessToken : accessToken})
+    } catch (error) {
+        throw new BadRequestError('invalid token kekw')
+    }
+
+}
+
+
+
+
+
+
 
 
 module.exports = {
     login,
-    register
+    register,
+    createNewToken
 }

@@ -33,6 +33,10 @@ UserSchema.methods.createJWT = function() {
     process.env.JWT_SECRET, {expiresIn: process.env.JWT_LIFETIME})
 }
 
+UserSchema.methods.createRefreshJWT = function() {
+    return jwt.sign({userId: this._id, name: this.name}, process.env.JWT_REFRESH_SECRET, {expiresIn: process.env.JWT_REFRESH_LIFETIME})
+}
+
 UserSchema.methods.comparePasswords = async function(candidatePassword) {
     const isMatch = await bcrypt.compare(candidatePassword, this.password)
     return isMatch

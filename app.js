@@ -17,7 +17,7 @@ const app = express()
 app.use(express.json())
 
 
-app.get('/', (req, res) => {
+app.get('/api/v1/refreshtoken', (req, res) => {
     res.send('server started')
 })
 
