@@ -1,4 +1,6 @@
 
+const { BadRequestError } = require('../customErrors')
+const NotFoundError = require('../customErrors/notfoundError')
 const Task = require('../models/Task')
 const {StatusCodes} = require('http-status-codes')
 const getAllTasks = async(req, res) => {
@@ -20,14 +22,15 @@ const getSingleTask = async(req, res) => {
     
     const task = await Task.findOne({_id: taskId, createdBy: userId})
     if(!task) {
-        return res.status(StatusCodes.NOT_FOUND).json({msg: `There is no task with id ${taskId}`})
+        throw new NotFoundError(`There is no task with id ${taskId}`)
+        // return res.status(StatusCodes.NOT_FOUND).json({msg: `There is no task with id ${taskId}`})
     }
 
     res.status(StatusCodes.OK).json({task})
 }
 const createTask = async(req, res) => {
     const task = await Task.create(req.body)
-    res.status(StatusCodes.OK).json({task})
+    res.status(StatusCodes.CREATED).json({task})
 
 
 }
@@ -35,7 +38,8 @@ const updateTask = async(req, res) => {
     const {user: {userId}, params: {id: taskId}} = req
     const {title, completed} = req.body
     if(title === "" || completed === "") {
-        res.status(StatusCodes.BAD_REQUEST).json({msg: "fields to update cant be empty"})
+        throw new BadRequestError('fields to update cant be empty')
+        // res.status(StatusCodes.BAD_REQUEST).json({msg: "fields to update cant be empty"})
     }
     let task = await Task.findOneAndUpdate({_id: taskId, createdBy: userId}, req.body, {new: true, runValidators: true})
     
@@ -46,7 +50,7 @@ const deleteTask = async(req, res) => {
     const {user: {userId}, params: {id: taskId}} = req
     const task = await Task.findOneAndDelete({_id: taskId, createdBy: userId})
     if(!task) {
-        return res.status(StatusCodes.NOT_FOUND).json({msg: `No such task with id ${userId}`})
+        throw new NotFoundError(`There is no task with id ${taskId}`)
     }
     res.status(StatusCodes.OK).json({msg: `Task with id ${taskId} has been deleted`})
 }

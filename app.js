@@ -5,7 +5,7 @@ const connectDB = require('./db/connect')
 //handling async errors
 require('express-async-errors')
 //error handlers
-const notFoundError = require('./customErrors/notfoundError')
+const NotFoundError = require('./customErrors/notfoundError')
 const errorHandlerMiddleware = require('./middleware/errorHandlerMiddleware')
 //routes
 const productRouter = require('./routes/productroutes')
@@ -24,7 +24,7 @@ app.get('/', (req, res) => {
 app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/tasks',authenticateUser, taskRouter)
 app.use('/api/v1/products', productRouter)
-app.use(notFoundError)
+app.use(NotFoundError)
 app.use(errorHandlerMiddleware)
 
 
