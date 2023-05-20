@@ -6,16 +6,24 @@ const RefreshToken = require('../models/RefreshToken');
 const NotFoundError = require('../customErrors/notfoundError');
 
 
-let refreshTokens = [];
+
 const register = async(req, res) => {
     const user = await User.create(req.body)
     const token = user.createJWT()
+    try {
+
+    } catch (err) {
+        // Log error
+        res.status(400)
+    }
     
     
     
     res.status(StatusCodes.CREATED).json({user, token})
 }
-const login = async(req, res) => {
+
+const login = async(req, res, userRepository = User) => {
+    
     // const {apikey} = req.headers
     // if(!apikey || apikey !== 'witekhuj') {
     //     throw new UnauthorizedError(`please provide correct apikey`)
@@ -24,7 +32,7 @@ const login = async(req, res) => {
     if(email === "" || password === "") {
         throw new BadRequestError('Please provide email and password')
     }
-    const user = await User.findOne({email: email})
+    const user = await userRepository.findOne({email: email})
     if(!user) {
         // return res.status(StatusCodes.UNAUTHORIZED).json({msg: 'Invalid credentials'})
         throw new UnauthorizedError('Invalid credentials')
@@ -36,7 +44,7 @@ const login = async(req, res) => {
     }
     const token = user.createJWT()
     const refreshToken = user.createRefreshJWT()
-    //----------------creating refresh token and saving it to database
+    // ----------------creating refresh token and saving it to database
     // const refreshToken = user.createRefreshJWT();
     //     const refreshTokenToDB = await RefreshToken.create({
     //     token: refreshToken,
@@ -45,23 +53,21 @@ const login = async(req, res) => {
     //     expiresIn : process.env.JWT_REFRESH_LIFETIME
     // })
     // await refreshTokenToDB.save()
-    refreshTokens.push(refreshToken)
-
-    res.status(StatusCodes.OK).json({user, accessToken: token, refreshToken: refreshToken})
-
+    
+    
+    res
+    .status(StatusCodes.OK)
+    .json({user, accessToken: token, refreshToken: refreshToken})
+    
 }
 
 
-//creates new acces token on base of refresh token
-const createNewToken = async(req, res) => {
-    const refreshToken = req.header('x-auth-token')
 
+//creates new acces token on base of refresh token
+const createNewToken = async(req, res,) => {
+    const refreshToken = req.header('x-auth-token')
     if(!refreshToken) {
         throw new NotFoundError('Token not found in header')
-    }
-
-    if(!refreshTokens.includes(refreshToken)) {
-        throw new NotFoundError('your refresh  token must have expired ')
     }
 
     try {
@@ -75,8 +81,6 @@ const createNewToken = async(req, res) => {
     }
 
 }
-
-
 
 
 

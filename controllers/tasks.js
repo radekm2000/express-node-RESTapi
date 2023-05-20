@@ -16,11 +16,13 @@ const getAllTasks = async(req, res) => {
     tasks = await result
     res.status(StatusCodes.OK).json({tasks, count: tasks.length})
 }
-const getSingleTask = async(req, res) => {
+const getSingleTask = async(req, res, taskRepository = Task) => {
 
     const {user: {userId}, params: {id: taskId}} = req
+
+    req.user.userId
     
-    const task = await Task.findOne({_id: taskId, createdBy: userId})
+    const task = await taskRepository.findOne({_id: taskId, createdBy: userId})
     if(!task) {
         throw new NotFoundError(`There is no task with id ${taskId}`)
         // return res.status(StatusCodes.NOT_FOUND).json({msg: `There is no task with id ${taskId}`})
@@ -46,9 +48,9 @@ const updateTask = async(req, res) => {
     
     res.status(StatusCodes.OK).json({msg: "You succesfuly updated task", task})
 }
-const deleteTask = async(req, res) => {
+const deleteTask = async(req, res, taskRepository = Task) => {
     const {user: {userId}, params: {id: taskId}} = req
-    const task = await Task.findOneAndDelete({_id: taskId, createdBy: userId})
+    const task = await taskRepository.findOneAndDelete({_id: taskId, createdBy: userId})
     if(!task) {
         throw new NotFoundError(`There is no task with id ${taskId}`)
     }

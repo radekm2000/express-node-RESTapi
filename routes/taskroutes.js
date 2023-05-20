@@ -5,7 +5,7 @@ const {getAllTasks, getSingleTask, createTask, updateTask, deleteTask} = require
 
 
 router.route('/').get(getAllTasks).post(createTask)
-router.route('/:id').get(getSingleTask).patch(updateTask).delete(deleteTask)
+router.route('/:id').get((req, res) => getSingleTask(req, res)).patch((req, res) => updateTask(req,res)).delete((req, res) => deleteTask(req, res))
 
 
 
